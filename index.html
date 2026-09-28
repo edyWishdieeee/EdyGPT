@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EdyGPT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F5F4;--surface:#fff;--ink:#15231F;--muted:#586A64;--line:#D8E1DE;--accent:#0B7A66;--on-accent:#fff;--user:#DCEBE6;--focus:#E59B00;--danger:#B3261E;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1715;--surface:#16211E;--ink:#E6EFEC;--muted:#9DB0AA;--line:#27352F;--accent:#3CC4A8;--on-accent:#06211A;--user:#1E2E29;--focus:#FFC24D;--danger:#F2B8B5}}
+:root[data-theme="dark"]{--bg:#0F1715;--surface:#16211E;--ink:#E6EFEC;--muted:#9DB0AA;--line:#27352F;--accent:#3CC4A8;--on-accent:#06211A;--user:#1E2E29;--focus:#FFC24D;--danger:#F2B8B5}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.55 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+button,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+[hidden]{display:none!important}
+
+.app{display:grid;grid-template-columns:270px 1fr;height:100%}
+.side{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 12px;gap:12px;min-height:0}
+.brand{display:flex;align-items:center;gap:10px;font:700 21px "Bricolage Grotesque",sans-serif;padding:2px 6px}
+.logo,.av{display:grid;place-items:center;background:var(--accent);color:var(--on-accent);font:700 16px "Bricolage Grotesque",sans-serif;border-radius:10px}
+.logo{width:32px;height:32px}
+.btn-new{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;font-weight:600}
+.btn-new:hover{border-color:var(--accent)}
+kbd{font:500 12px "Instrument Sans",sans-serif;color:var(--muted);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 6px;background:var(--surface)}
+.side h2{font-size:13px;font-weight:600;color:var(--muted);margin:8px 6px 0}
+#history{list-style:none;margin:0;padding:0;overflow:auto;flex:1}
+.hi{width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:8px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hi:hover{background:var(--bg)}
+.hi[aria-current]{background:var(--user);font-weight:600}
+.link{background:none;border:0;padding:4px 6px;color:var(--accent);text-decoration:underline;text-underline-offset:3px;font-weight:500}
+
+main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.top{display:flex;align-items:center;gap:8px;padding:10px 16px;min-height:56px}
+.top .title{font:700 18px "Bricolage Grotesque",sans-serif}
+.spacer{flex:1}
+.ghost{background:none;border:1px solid transparent;border-radius:10px;padding:6px 10px;color:var(--muted)}
+.ghost:hover{border-color:var(--line);color:var(--ink)}
+#menuBtn{display:none}
+
+#chat{flex:1;overflow-y:auto;padding:8px 16px 16px}
+.col{max-width:740px;margin:0 auto}
+#empty{padding-top:min(14vh,110px)}
+#empty h1{font:700 clamp(28px,5vw,42px)/1.1 "Bricolage Grotesque",sans-serif;margin:0 0 6px;letter-spacing:-.02em}
+#empty p{margin:0 0 24px;color:var(--muted)}
+#sugg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chip{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.chip:hover{border-color:var(--accent)}
+.chip b{font-weight:600}
+.chip span{font-size:14px;color:var(--muted)}
+
+#msgs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:22px}
+.msg{display:flex;gap:12px}
+.msg.user{justify-content:flex-end}
+.bub{background:var(--user);border-radius:18px 18px 4px 18px;padding:10px 14px;max-width:85%;overflow-wrap:anywhere}
+.av{width:30px;height:30px;flex:none;font-size:14px;border-radius:9px}
+.body{min-width:0;flex:1}
+.txt{overflow-wrap:anywhere}
+.txt code{background:var(--user);padding:1px 5px;border-radius:5px;font-size:.92em}
+.txt pre{background:var(--user);padding:10px 12px;border-radius:10px;overflow-x:auto;font-size:.9em;margin:8px 0}
+.txt pre code{background:none;padding:0}
+.note{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.err{margin:0 0 8px;color:var(--danger)}
+.pill{border:1px solid var(--accent);background:none;color:var(--accent);border-radius:999px;padding:5px 14px;font-weight:600}
+.acts{display:flex;gap:2px;margin-top:6px}
+.acts button{background:none;border:0;border-radius:8px;padding:4px 9px;font-size:14px;color:var(--muted)}
+.acts button:hover{background:var(--user);color:var(--ink)}
+.acts button[aria-pressed="true"]{background:var(--user);color:var(--accent);font-weight:600}
+.dots{display:inline-flex;gap:4px;padding:8px 0}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:b 1s infinite ease-in-out}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-4px)}}
+
+.dock{padding:8px 16px 12px}
+.composer{max-width:740px;margin:0 auto;display:flex;align-items:flex-end;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:8px 8px 8px 16px}
+.composer:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+textarea{flex:1;border:0;background:none;resize:none;outline:none;max-height:180px;padding:7px 0;line-height:1.45}
+textarea::placeholder{color:var(--muted)}
+#send{width:38px;height:38px;flex:none;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);font-size:18px;font-weight:700}
+#send:disabled{background:var(--line);color:var(--muted);cursor:not-allowed}
+.meta{max-width:740px;margin:8px auto 0;display:flex;justify-content:center;gap:6px;flex-wrap:wrap;font-size:13px;color:var(--muted);text-align:center}
+#cnt{font-variant-numeric:tabular-nums}
+
+#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 16px;display:flex;gap:14px;align-items:center;opacity:0;pointer-events:none;transition:.2s;font-size:15px;z-index:30}
+#toast.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+#toast button{background:none;border:0;color:inherit;font-weight:700;text-decoration:underline}
+
+dialog{border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--ink);max-width:460px;width:calc(100% - 32px);padding:22px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{font:700 22px "Bricolage Grotesque",sans-serif;margin:0 0 8px}
+dialog h3{font-size:15px;margin:16px 0 4px}
+dialog ul{margin:0;padding-left:20px;color:var(--muted)}
+dialog li{margin:3px 0}
+.close{margin-top:18px;background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:8px 18px;font-weight:600}
+#scrim{display:none}
+
+@media (max-width:800px){
+ .app{grid-template-columns:1fr}
+ .side{position:fixed;inset:0 auto 0 0;width:280px;z-index:20;transform:translateX(-100%);transition:transform .2s;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+ .side.open{transform:none}
+ #scrim.on{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10}
+ #menuBtn{display:inline-block}
+ #sugg{grid-template-columns:1fr}
+ .btn-new kbd{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+ <aside class="side" id="side" aria-label="Conversaciones">
+  <div class="brand"><span class="logo" aria-hidden="true">E</span>EdyGPT</div>
+  <button class="btn-new" id="newChat"><span>+ Nueva conversación</span><kbd>Ctrl K</kbd></button>
+  <h2>Recientes</h2>
+  <ul id="history"></ul>
+  <button class="link" id="helpBtn">Ayuda y atajos</button>
+ </aside>
+
+ <main>
+  <header class="top">
+   <button class="ghost" id="menuBtn" aria-label="Abrir conversaciones">☰</button>
+   <span class="title">EdyGPT</span>
+   <span class="spacer"></span>
+   <button class="ghost" id="delBtn" hidden>Eliminar conversación</button>
+  </header>
+
+  <section id="chat" aria-label="Conversación">
+   <div class="col">
+    <div id="empty">
+     <h1>¿En qué te puedo ayudar?</h1>
+     <p>Escribe abajo o empieza con una de estas opciones.</p>
+     <div id="sugg" role="group" aria-label="Sugerencias para empezar"></div>
+    </div>
+    <ol id="msgs"></ol>
+   </div>
+  </section>
+
+  <div class="dock">
+   <div class="composer">
+    <label class="sr" for="input">Mensaje para EdyGPT</label>
+    <textarea id="input" rows="1" maxlength="2000" placeholder="Escribe tu pregunta o elige una sugerencia"></textarea>
+    <button id="send" aria-label="Enviar mensaje" disabled>↑</button>
+   </div>
+   <p class="meta">
+    <span>EdyGPT es una IA y puede equivocarse. Verifica la información importante.</span>
+    <button class="link" id="moreInfo">Cómo usarlo</button>
+    <span id="cnt"></span>
+   </p>
+  </div>
+ </main>
+</div>
+
+<div id="scrim"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<p class="sr" id="status" role="status" aria-live="polite"></p>
+
+<dialog id="help" aria-labelledby="helpT">
+ <h2 id="helpT">Cómo usar EdyGPT</h2>
+ <h3>Puedes pedirme</h3>
+ <ul><li>Explicar temas con ejemplos</li><li>Resumir o redactar textos</li><li>Revisar código y encontrar errores</li></ul>
+ <h3>Atajos</h3>
+ <ul>
+  <li><kbd>Enter</kbd> envía y <kbd>Shift</kbd> + <kbd>Enter</kbd> agrega un salto de línea</li>
+  <li><kbd>↑</kbd> con el campo vacío recupera tu último mensaje</li>
+  <li><kbd>Esc</kbd> detiene la respuesta</li>
+  <li><kbd>Ctrl</kbd> + <kbd>K</kbd> abre una conversación nueva</li>
+ </ul>
+ <h3>Ten en cuenta</h3>
+ <ul><li>EdyGPT es una IA: puede dar respuestas incorrectas o incompletas.</li><li>No compartas contraseñas ni datos personales sensibles.</li></ul>
+ <button class="close" id="closeHelp">Entendido</button>
+</dialog>
+
+<script>
+const API_URL='https://saintedyy.app.n8n.cloud/webhook/edygpt';
+const $=s=>document.querySelector(s);
+const input=$('#input'),send=$('#send'),M=$('#msgs'),H=$('#history'),chat=$('#chat'),empty=$('#empty'),
+ delBtn=$('#delBtn'),side=$('#side'),scrim=$('#scrim'),T=$('#toast'),cnt=$('#cnt'),help=$('#help');
+let chats=[],cur=null,busy=false,timer=null,tt=null,ctrl=null;
+
+const SUGG=[
+ {t:'Explicar un tema',s:'Con un ejemplo sencillo',p:'Explícame con un ejemplo sencillo: '},
+ {t:'Resumir un texto',s:'En cinco puntos clave',p:'Resume en cinco puntos el siguiente texto:\n\n'},
+ {t:'Redactar un correo',s:'Formal y claro',p:'Redacta un correo formal para pedir una prórroga de entrega.'},
+ {t:'Revisar código',s:'Encontrar un error',p:'Ayúdame a encontrar el error en este código:\n\n'}
+];
+$('#sugg').innerHTML=SUGG.map((x,i)=>`<button class="chip" data-i="${i}"><b>${x.t}</b><span>${x.s}</span></button>`).join('');
+
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>{
+ const blocks=[];
+ s=s.replace(/```[\w-]*\n?([\s\S]*?)```/g,(_,c)=>{blocks.push(c.replace(/\n$/,''));return '\u0000'+(blocks.length-1)+'\u0000'});
+ let h=esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code>$1</code>').replace(/^- /gm,'• ').replace(/\n/g,'<br>');
+ return h.replace(/\u0000(\d+)\u0000/g,(_,i)=>'<pre><code>'+esc(blocks[i])+'</code></pre>');
+};
+
+function newChat(){
+ if(cur&&!cur.msgs.length){input.focus();closeSide();return}
+ if(busy)stop();
+ cur={id:Date.now(),title:'Nueva conversación',msgs:[]};
+ chats.unshift(cur);render();input.focus();closeSide();
+}
+function actions(m,i,last){
+ return `<div class="acts"><button data-a="copy" data-i="${i}">Copiar</button>${last?`<button data-a="regen">Regenerar</button>`:''}<button data-a="up" data-i="${i}" aria-pressed="${m.fb==='up'}" aria-label="Respuesta útil">👍</button><button data-a="down" data-i="${i}" aria-pressed="${m.fb==='down'}" aria-label="Respuesta no útil">👎</button></div>`;
+}
+function msgHTML(m,i){
+ if(m.role==='user')return `<li class="msg user"><div class="bub">${fmt(m.text)}</div></li>`;
+ const last=i===cur.msgs.length-1;
+ const body=m.error?`<p class="err"><strong>No se pudo generar la respuesta.</strong> Revisa tu conexión e inténtalo de nuevo.</p><button class="pill" data-a="retry">Reintentar</button>`
+  :m.text?fmt(m.text):`<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="sr">EdyGPT está escribiendo</span>`;
+ const done=!(busy&&last)&&!m.error&&m.text;
+ return `<li class="msg bot"><span class="av" aria-hidden="true">E</span><div class="body"><div class="txt">${body}</div>${m.stopped?'<p class="note">Respuesta detenida.</p>':''}${done?actions(m,i,last):''}</div></li>`;
+}
+function render(){
+ H.innerHTML=chats.map(c=>`<li><button class="hi" data-id="${c.id}"${c===cur?' aria-current="true"':''}>${esc(c.title)}</button></li>`).join('');
+ empty.hidden=cur.msgs.length>0;
+ delBtn.hidden=!cur.msgs.length;
+ M.innerHTML=cur.msgs.map(msgHTML).join('');
+ setBusy();scrollDown();
+}
+function scrollDown(){chat.scrollTop=chat.scrollHeight}
+function setBusy(){
+ send.textContent=busy?'■':'↑';
+ send.setAttribute('aria-label',busy?'Detener respuesta':'Enviar mensaje');
+ send.disabled=!busy&&!input.value.trim();
+}
+
+function submit(){
+ const text=input.value.trim();
+ if(!text||busy)return;
+ cur.msgs.push({role:'user',text});
+ if(cur.msgs.length===1)cur.title=text.length>34?text.slice(0,34)+'…':text;
+ input.value='';autosize();respond();
+}
+
+/* Conexión con la IA en n8n */
+async function respond(){
+ const q=[...cur.msgs].reverse().find(m=>m.role==='user').text;
+ const history=cur.msgs.slice(0,-1).filter(m=>m.text&&!m.error).map(m=>({role:m.role,text:m.text}));
+ const bot={role:'bot',text:''};
+ cur.msgs.push(bot);busy=true;render();
+ $('#status').textContent='EdyGPT está escribiendo…';
+ if(!navigator.onLine){timer=setTimeout(()=>{bot.error=true;finish()},600);return}
+ const myCtrl=new AbortController();ctrl=myCtrl;
+ try{
+  const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({message:q,history}),signal:myCtrl.signal});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const data=await r.json();
+  if(!busy||ctrl!==myCtrl)return;
+  const parts=((data.reply||'').trim()||'No obtuve respuesta, intenta de nuevo.').split(/(\s+)/);let i=0;
+  timer=setInterval(()=>{
+   if(i>=parts.length){finish();return}
+   bot.text+=parts[i++];
+   const t=M.querySelector('.msg:last-child .txt');if(t)t.innerHTML=fmt(bot.text);
+   scrollDown();
+  },15);
+ }catch(e){
+  if(e.name==='AbortError'||ctrl!==myCtrl)return;
+  bot.error=true;finish();
+ }
+}
+function finish(){
+ clearTimeout(timer);clearInterval(timer);timer=null;busy=false;
+ if(ctrl){ctrl.abort();ctrl=null}
+ $('#status').textContent='';render();
+}
+function stop(){
+ if(!busy)return;
+ const bot=cur.msgs[cur.msgs.length-1];
+ if(bot.text)bot.stopped=true;else{cur.msgs.pop();toast('Respuesta cancelada')}
+ finish();
+}
+
+function toast(msg,label,fn){
+ T.innerHTML='';const s=document.createElement('span');s.textContent=msg;T.append(s);
+ if(label){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{fn();T.classList.remove('on')};T.append(b)}
+ T.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>T.classList.remove('on'),label?6000:2500);
+}
+function autosize(){
+ input.style.height='auto';input.style.height=Math.min(input.scrollHeight,180)+'px';
+ const n=input.value.length;cnt.textContent=n>1600?n+' / 2000':'';setBusy();
+}
+function openSide(){side.classList.add('open');scrim.classList.add('on')}
+function closeSide(){side.classList.remove('open');scrim.classList.remove('on')}
+
+input.addEventListener('input',autosize);
+input.addEventListener('keydown',e=>{
+ if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();submit()}
+ if(e.key==='ArrowUp'&&!input.value){
+  const u=[...cur.msgs].reverse().find(m=>m.role==='user');
+  if(u){e.preventDefault();input.value=u.text;autosize()}
+ }
+});
+send.onclick=()=>busy?stop():submit();
+$('#newChat').onclick=newChat;
+$('#menuBtn').onclick=openSide;scrim.onclick=closeSide;
+$('#helpBtn').onclick=$('#moreInfo').onclick=()=>help.showModal();
+$('#closeHelp').onclick=()=>help.close();
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&busy&&!help.open)stop();
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();newChat()}
+});
+$('#sugg').onclick=e=>{
+ const b=e.target.closest('.chip');if(!b)return;
+ input.value=SUGG[b.dataset.i].p;autosize();input.focus();
+ input.setSelectionRange(input.value.length,input.value.length);
+};
+H.onclick=e=>{
+ const b=e.target.closest('.hi');if(!b)return;
+ const c=chats.find(x=>x.id==b.dataset.id);
+ if(c&&c!==cur){if(busy)stop();cur=c;render()}closeSide();
+};
+delBtn.onclick=()=>{
+ if(busy)stop();
+ const i=chats.indexOf(cur),removed=cur;chats.splice(i,1);
+ if(!chats.length)chats.push({id:Date.now(),title:'Nueva conversación',msgs:[]});
+ cur=chats[Math.min(i,chats.length-1)];render();
+ toast('Conversación eliminada','Deshacer',()=>{chats.splice(i,0,removed);cur=removed;render()});
+};
+M.onclick=e=>{
+ const b=e.target.closest('button[data-a]');if(!b)return;
+ const a=b.dataset.a,m=cur.msgs[b.dataset.i];
+ if(a==='copy'){
+  (navigator.clipboard?navigator.clipboard.writeText(m.text):Promise.reject()).then(()=>toast('Respuesta copiada')).catch(()=>toast('No se pudo copiar. Selecciona el texto y cópialo manualmente.'));
+ }
+ if(a==='regen'||a==='retry'){cur.msgs.pop();respond()}
+ if(a==='up'||a==='down'){m.fb=m.fb===a?null:a;if(m.fb)toast('Gracias por tu opinión');render()}
+};
+
+newChat();
+</script>
+</body>
+</html>
